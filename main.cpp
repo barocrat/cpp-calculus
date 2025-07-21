@@ -44,7 +44,7 @@ int main() { //just testing
     cout.precision(20);
 
     rep evald_lim = lim([](double x) -> double {
-        return pow(1+1/x, x);
+        return 1/x;
     }, rep{0, POS_INF});
 
     cout << evald_lim.v << ' ' << evald_lim.r;

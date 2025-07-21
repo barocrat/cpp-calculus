@@ -53,7 +53,9 @@ rep lim_to_inf(double (*f)(double), enum remark r) {
             continue;
         } else if (approx(func_outputs[i-1], func_outputs[i], 1)) {
             output_val = (func_outputs[i-1]+func_outputs[i])/2;
-            return rep{output_val, NONE};
+            if (approx(output_val,0,1)) {return rep{0, NONE};}
+                //clamp to zero if extremely close
+            else {return rep{output_val,NONE};};
         }
     }
 
@@ -128,8 +130,9 @@ rep lim_to_side(double (*f)(double), rep x) {
             continue;
         } else if (approx(func_outputs[i-1], func_outputs[i], 1)) {
             output_val = (func_outputs[i-1]+func_outputs[i])/2;
-            return (approx(output_val,0,1)? rep{0, NONE}:rep{output_val, NONE});
-                //if output_val extremely close to zero, return zero
+            if (approx(output_val,0,1)) {return rep{0, NONE};}
+                //clamp to zero if extremely close
+            else {return rep{output_val,NONE};};
         }
     }
 

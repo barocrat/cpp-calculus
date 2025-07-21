@@ -21,7 +21,7 @@ struct rep{
 //functions
 inline bool approx(double a, double b, int tol_lvl) {
     const float neglig = 1E-10; //negligible value
-    const float hard_tolerance = 1E-3; //actual diff to hit
+    const float hard_tolerance = 1E-5; //actual diff to hit
 
     float soft_tolerance; //percentage diff needed
     switch (tol_lvl) { //more tol_lvl = stricter tolerance
