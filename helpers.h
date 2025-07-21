@@ -4,21 +4,21 @@
 #include <iostream>
 using namespace std;
 
-//structures ->
+//structures
 enum remark {
-    POS_INF, //0
-    NEG_INF, //1
-    POS_SIDE, //2
-    NEG_SIDE, //3
-    DNE, //4
-    NONE, //5
+    POS_INF,    //0
+    NEG_INF,    //1
+    POS_SIDE,   //2
+    NEG_SIDE,   //3
+    DNE,        //4
+    NONE,       //5
 };
 struct rep{
     double v; //value
     enum remark r; //remark
 };
 
-//functions ->
+//functions
 inline bool approx(double a, double b, int tol_lvl) {
     const float neglig = 1E-10; //negligible value
     const float hard_tolerance = 1E-3; //actual diff to hit
