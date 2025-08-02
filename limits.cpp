@@ -64,6 +64,17 @@ rep lim_to_inf(double (*f)(double), enum remark r) {
             (func_inputs[i+1]-func_inputs[i])
         );
 
+        //check for derivative monotonicity
+        if (i==1) {first_inc = rate_of_change[1]>rate_of_change[0];}
+        else if (i>1) {
+            //if oscillates, return dne
+            if (
+                (rate_of_change[i]>rate_of_change[i-1])
+                !=first_inc
+            ) {
+                return rep{0, DNE};
+            }
+        }
         //checking if can be considered inf
         if (rate_of_change[i] > def_inf) {
             return rep{0, POS_INF};
@@ -71,14 +82,7 @@ rep lim_to_inf(double (*f)(double), enum remark r) {
             return rep{0, NEG_INF};
         }
     }
-    //checking if rate_of_change is monotonic
-    first_inc = rate_of_change[1]>rate_of_change[0];
-    for (i=2; i<tries-1; i++) {
-        //if not, return dne bc oscillates
-        if ((rate_of_change[i]>rate_of_change[i-1])!=first_inc) {
-            return rep{0, DNE};
-        };
-    }
+
     //return +- infinity as necessary
     return (rate_of_change[0]>0? rep{0, POS_INF}:rep{0, NEG_INF});
 }
@@ -139,8 +143,15 @@ rep lim_to_side(double (*f)(double), rep x) {
             (func_outputs[i+1]-func_outputs[i]) /
             (func_inputs[i+1]-func_inputs[i])
         );
-        std::cout << "lts roc " << rate_of_change[i] << '\n';
 
+        //check for derivative monotonicity
+        if (i==1) {first_inc = rate_of_change[1]>rate_of_change[0];}
+        else if (i>1) {
+            //if oscillates, return dne
+            if ((rate_of_change[i]>rate_of_change[i-1])!=first_inc) {
+                return rep{0, DNE};
+            }
+        }
         //checking if can be considered inf
         if (rate_of_change[i] > def_inf) {
             return rep{0, POS_INF};
@@ -148,15 +159,7 @@ rep lim_to_side(double (*f)(double), rep x) {
             return rep{0, NEG_INF};
         }
     }
-    //checking if rate_of_change is monotonic
-    first_inc = rate_of_change[1]>rate_of_change[0];
-    for (i=2; i<tries-1; i++) {
-        //if not, return dne bc oscillates
-        std::cout << "lts fi " << first_inc << '\n';
-        if ((rate_of_change[i]>rate_of_change[i-1])!=first_inc) {
-            return rep{0, DNE};
-        };
-    }
+    
     //return +- infinity as necessary
     return (rate_of_change[0]>0? rep{0, POS_INF}:rep{0, NEG_INF});
 };
