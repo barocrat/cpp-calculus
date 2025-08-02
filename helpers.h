@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <iostream>
-using namespace std;
 
 //structures
 enum remark {
@@ -30,9 +29,9 @@ inline bool approx(double a, double b, int tol_lvl) {
     }
 
     return
-        200*abs((a-b)/(a+b+neglig))<soft_tolerance ||
+        200*std::abs((a-b)/(a+b+neglig))<soft_tolerance ||
             //using slightly modified midpoint percent
             //to avoid div by zero
-        abs(a-b)<hard_tolerance;
+        std::abs(a-b)<hard_tolerance;
     ;
 }

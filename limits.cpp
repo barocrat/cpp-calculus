@@ -1,14 +1,11 @@
-#include "limits.h"
 #include <vector>
-using namespace std;
+
+#include "helpers.h"
+#include "limits.h"
 
 //constants
-
-const int tries = 1E+3;
-    //num of checks to see if lim converges
-    //before giving up and checking end behavior
-const long long def_inf = 1E+10;
-    //if k larger than def_inf, k considered to be inf
+const int tries = 1E+3; //num of checks for convergence before giving up
+const long long def_inf = 1E+10; //if k>def_inf, considered to be inf
 
 //functions
 rep lim_to_inf(double (*f)(double), enum remark r) {
@@ -19,74 +16,72 @@ rep lim_to_inf(double (*f)(double), enum remark r) {
     */
 
     //constants
-    const float x_toinf_init = 1E+5;
-    const float toinf_factor = 10;
+    const float input_init = 1E+5;
+    const float input_scaling = 10;
 
-    //init
+    //init types
     int i;
     bool first_inc;
-    double x_tocheck, output_val, curr_out;
-    vector<double> func_inputs, func_outputs, raofch;
-        //raofch is rate of change
+    double curr_input, curr_output;
+    double lim_output;
+    std::vector<double> func_inputs, func_outputs, rate_of_change;
 
-    //testing converging to what
-    x_tocheck = (r==POS_INF)? x_toinf_init:-x_toinf_init;
-        //no error handling since its only called
-        //with a hard set r remark value passed in main.cpp
+    //testing converging to what (assuming it does)
+    curr_input = (r==POS_INF)? input_init:-input_init;
+
     for (i=0; i<tries; i++) {
-        //get current value
-        curr_out = f(x_tocheck);
+        //get current func output
+        curr_output = f(curr_input);
         //updating values
-        func_inputs.push_back(x_tocheck);
-        func_outputs.push_back(curr_out);
-        x_tocheck*=toinf_factor;
+        func_inputs.push_back(curr_input);
+        func_outputs.push_back(curr_output);
+        curr_input*=input_scaling;
 
         //checking if can be considered inf
-        if (func_outputs[i] > def_inf) {
+        if (curr_output > def_inf) {
             return rep{0, POS_INF};
-        } else if (func_outputs[i] < -def_inf) {
+        } else if (curr_output < -def_inf) {
             return rep{0, NEG_INF};
         }
         //checking if converges
         else if (i==0) {
             //bc first elem, so nothing before it
             continue;
-        } else if (approx(func_outputs[i-1], func_outputs[i], 1)) {
-            output_val = (func_outputs[i-1]+func_outputs[i])/2;
-            if (approx(output_val,0,1)) {return rep{0, NONE};}
+        } else if (approx(func_outputs[i-1], curr_output, 1)) {
+            lim_output = (func_outputs[i-1]+curr_output)/2;
+            if (approx(lim_output,0,1)) {return rep{0, NONE};}
                 //clamp to zero if extremely close
-            else {return rep{output_val,NONE};};
+            else {return rep{lim_output,NONE};};
         }
     }
 
-    //checking if raofch converges at all
+    //checking if lim converges at all
     //defining values
     for (i=0; i<tries-1; i++) {
-        //filling raofch
-        raofch.push_back(
+        //filling rate_of_change
+        rate_of_change.push_back(
             (func_outputs[i+1]-func_outputs[i]) /
             (func_inputs[i+1]-func_inputs[i])
         );
 
         //checking if can be considered inf
-        if (raofch[i] > def_inf) {
+        if (rate_of_change[i] > def_inf) {
             return rep{0, POS_INF};
-        } else if (raofch[i] < -def_inf) {
+        } else if (rate_of_change[i] < -def_inf) {
             return rep{0, NEG_INF};
         }
     }
-    //confirming raofch is monotonic
-    first_inc = raofch[1]>raofch[0];
+    //checking if rate_of_change is monotonic
+    first_inc = rate_of_change[1]>rate_of_change[0];
     for (i=2; i<tries-1; i++) {
-        //otherwise, return dne bc oscillates
-        if ((raofch[i]>raofch[i-1])!=first_inc) {
+        //if not, return dne bc oscillates
+        if ((rate_of_change[i]>rate_of_change[i-1])!=first_inc) {
             return rep{0, DNE};
         };
     }
     //return +- infinity as necessary
-    return (raofch[0]>0? rep{0, POS_INF}:rep{0, NEG_INF});
+    return (rate_of_change[0]>0? rep{0, POS_INF}:rep{0, NEG_INF});
 }
-
 rep lim_to_side(double (*f)(double), rep x) {
     /*
     exponentially decays an offset from input
@@ -96,26 +91,26 @@ rep lim_to_side(double (*f)(double), rep x) {
 
     //constants
     const float dx_init = 1;
-    const float dx_decay_factor = .05;
+    const float dx_decay = .05;
 
-    //init
+    //init types
     int i;
     bool first_inc;
-    double x_tocheck_r, dx, output_val, curr_out;
-    vector<double> func_inputs, func_outputs, raofch;
-        //raofch is rate of change
+    double curr_input, curr_output, dx;
+    double lim_output;
+    std::vector<double> func_inputs, func_outputs, rate_of_change;
 
+    //checking converges to what (assuming it does)
     dx = (x.r==POS_SIDE)? dx_init:-dx_init;
-        //x remark already checked in main.cpp
 
     for (i=0; i<tries; i++) {
         //get round input, output values
-        x_tocheck_r = x.v+dx;
-        curr_out = f(x_tocheck_r);
+        curr_input = x.v+dx;
+        curr_output = f(curr_input);
         //updating values
-        func_inputs.push_back(x_tocheck_r);
-        func_outputs.push_back(curr_out);
-        dx *= dx_decay_factor;
+        func_inputs.push_back(curr_input);
+        func_outputs.push_back(curr_output);
+        dx *= dx_decay;
 
         //checking values
         //checking if can be considered inf
@@ -128,38 +123,40 @@ rep lim_to_side(double (*f)(double), rep x) {
         else if (i==0) {
             //bc first elem, so nothing before it
             continue;
-        } else if (approx(func_outputs[i-1], func_outputs[i], 1)) {
-            output_val = (func_outputs[i-1]+func_outputs[i])/2;
-            if (approx(output_val,0,1)) {return rep{0, NONE};}
+        } else if (approx(func_outputs[i-1], curr_output, 1)) {
+            lim_output = (func_outputs[i-1]+curr_output)/2;
+            if (approx(lim_output,0,1)) {return rep{0, NONE};}
                 //clamp to zero if extremely close
-            else {return rep{output_val,NONE};};
+            else {return rep{lim_output,NONE};};
         }
     }
 
-    //checking if converges at all
+    //checking if lim converges at all
     //defining values
     for (i=0; i<tries-1; i++) {
-        //filling raofch
-        raofch.push_back(
+        //filling rate_of_change
+        rate_of_change.push_back(
             (func_outputs[i+1]-func_outputs[i]) /
             (func_inputs[i+1]-func_inputs[i])
         );
+        std::cout << "lts roc " << rate_of_change[i] << '\n';
 
         //checking if can be considered inf
-        if (raofch[i] > def_inf) {
+        if (rate_of_change[i] > def_inf) {
             return rep{0, POS_INF};
-        } else if (raofch[i] < -def_inf) {
+        } else if (rate_of_change[i] < -def_inf) {
             return rep{0, NEG_INF};
         }
     }
-    //confirming raofch is monotonic
-    first_inc = raofch[1]>raofch[0];
+    //checking if rate_of_change is monotonic
+    first_inc = rate_of_change[1]>rate_of_change[0];
     for (i=2; i<tries-1; i++) {
-        //otherwise, return dne bc oscillates
-        if ((raofch[i]>raofch[i-1])!=first_inc) {
+        //if not, return dne bc oscillates
+        std::cout << "lts fi " << first_inc << '\n';
+        if ((rate_of_change[i]>rate_of_change[i-1])!=first_inc) {
             return rep{0, DNE};
         };
     }
     //return +- infinity as necessary
-    return (raofch[0]>0? rep{0, POS_INF}:rep{0, NEG_INF});
+    return (rate_of_change[0]>0? rep{0, POS_INF}:rep{0, NEG_INF});
 };
